@@ -4,6 +4,7 @@ import numpy as np
 import imageio
 import time
 from pathlib import Path
+import random  # 👈 for random choice
 
 mp_face_mesh = mp.solutions.face_mesh
 face_mesh = mp_face_mesh.FaceMesh(static_image_mode=False, max_num_faces=1, refine_landmarks=True)
@@ -14,6 +15,7 @@ output_dir.mkdir(exist_ok=True)
 # GIF paths
 tongue_gif = "assets/tongue.gif"
 closed_eyes_gif = "assets/closed_eyes.gif"
+closed_eyes_2_gif = "assets/closed_eyes2.gif"
 
 # Load GIFs
 def load_gif(path):
@@ -22,11 +24,17 @@ def load_gif(path):
         frames_bgr = [cv2.cvtColor(frame, cv2.COLOR_RGB2BGR) for frame in gif_frames]
         return frames_bgr
     except Exception as e:
-        print(f"Error loading GIF: {e}")
+        print(f"Error loading GIF {path}: {e}")
         return None
 
 tongue_frames = load_gif(tongue_gif)
-eyes_frames = load_gif(closed_eyes_gif)
+
+# 👇 Load both closed-eyes GIFs into a list
+eyes_variants = []
+for p in [closed_eyes_gif, closed_eyes_2_gif]:
+    frames = load_gif(p)
+    if frames:
+        eyes_variants.append(frames)
 
 def eye_aspect_ratio(landmarks, eye_indices):
     p1, p2, p3, p4, p5, p6 = [np.array([landmarks[i].x, landmarks[i].y]) for i in eye_indices]
@@ -53,14 +61,22 @@ frames_for_gif = []
 reaction_mode = None
 reaction_index = 0
 
+# 👇 Track previous mode and the currently chosen eyes GIF
+last_reaction_mode = None
+current_eyes_frames = None
+
 print("Press Q to quit...")
 
 while True:
     success, frame = cap.read()
     if not success:
         break
+
     rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
     results = face_mesh.process(rgb)
+
+    eyes_closed = False
+    tongue_out = False
 
     if results.multi_face_landmarks:
         landmarks = results.multi_face_landmarks[0].landmark
@@ -84,21 +100,34 @@ while True:
         else:
             reaction_mode = None
             cv2.putText(frame, "Normal", (20, 40), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,255,0), 2)
+    else:
+        reaction_mode = None
+        cv2.putText(frame, "No face", (20, 40), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,255,255), 2)
+
+    # If reaction mode changed, reset index and (if eyes) pick a random eyes GIF
+    if reaction_mode != last_reaction_mode:
+        reaction_index = 0
+        if reaction_mode == "eyes" and eyes_variants:
+            current_eyes_frames = random.choice(eyes_variants)
+        last_reaction_mode = reaction_mode
 
     # Display main camera feed
     cv2.imshow("Freak Detector", frame)
 
     # Reaction window
-    if reaction_mode == "eyes" and eyes_frames:
-        gif_frame = eyes_frames[reaction_index % len(eyes_frames)]
-        cv2.imshow("Reaction", gif_frame)
+    if reaction_mode == "eyes" and current_eyes_frames:
+        gif_frame = current_eyes_frames[reaction_index % len(current_eyes_frames)]
+        scaled = cv2.resize(gif_frame, (500, 500), interpolation=cv2.INTER_LINEAR)
+        cv2.imshow("Reaction", scaled)
+
         reaction_index += 1
     elif reaction_mode == "tongue" and tongue_frames:
         gif_frame = tongue_frames[reaction_index % len(tongue_frames)]
-        cv2.imshow("Reaction", gif_frame)
+        scaled = cv2.resize(gif_frame, (500, 500), interpolation=cv2.INTER_LINEAR)
+        cv2.imshow("Reaction", scaled)
         reaction_index += 1
     else:
-        blank = np.zeros((200, 300, 3), dtype=np.uint8)
+        blank = np.zeros((500, 500, 3), dtype=np.uint8)
         cv2.putText(blank, "Not Freaky", (30, 100), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (200,200,200), 2)
         cv2.imshow("Reaction", blank)
 
