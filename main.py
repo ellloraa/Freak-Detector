@@ -93,13 +93,13 @@ while True:
 
         if eyes_closed:
             reaction_mode = "eyes"
-            cv2.putText(frame, "hell nah", (20, 40), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2)
+            cv2.putText(frame, "acceptance", (20, 40), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2)
         elif tongue_out:
             reaction_mode = "tongue"
-            cv2.putText(frame, "freak of nature", (20, 40), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,0,0), 2)
+            cv2.putText(frame, "freaky ahh", (20, 40), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,0,0), 2)
         else:
             reaction_mode = None
-            cv2.putText(frame, "Normal", (20, 40), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,255,0), 2)
+            cv2.putText(frame, "alright.", (20, 40), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,255,0), 2)
     else:
         reaction_mode = None
         cv2.putText(frame, "No face", (20, 40), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,255,255), 2)
