@@ -127,9 +127,10 @@ while True:
         cv2.imshow("Reaction", scaled)
         reaction_index += 1
     else:
-        blank = np.zeros((500, 500, 3), dtype=np.uint8)
-        cv2.putText(blank, "Not Freaky", (30, 100), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (200,200,200), 2)
-        cv2.imshow("Reaction", blank)
+        serious_img = cv2.imread("assets/serious.jpg")
+        serious_img = cv2.resize(serious_img, (500, 500))
+        cv2.putText(serious_img, "Not Freaky", (30, 100), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (200,200,200), 2)
+        cv2.imshow("Reaction", serious_img)
 
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
